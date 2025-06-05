@@ -1,0 +1,41 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model DatabaseMetadata {
+  id                Int         @id @default(1)
+  name              String?
+  containerCapacity Int?
+  totalMessages     Int         @default(0)
+  isInitialized     Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  containers        Container[]
+  messages          Message[]
+}
+
+model Container {
+  id           Int              @id @default(autoincrement())
+  database     DatabaseMetadata @relation(fields: [databaseId], references: [id])
+  databaseId   Int
+  capacity     Int
+  currentCount Int              @default(0)
+  createdAt    DateTime         @default(now())
+  messages     Message[]
+}
+
+model Message {
+  id          Int              @id @default(autoincrement())
+  content     String           @db.VarChar(10)
+  container   Container        @relation(fields: [containerId], references: [id])
+  containerId Int
+  database    DatabaseMetadata @relation(fields: [databaseId], references: [id])
+  databaseId  Int
+  createdAt   DateTime         @default(now())
+
+  @@unique([content, databaseId])
+}
